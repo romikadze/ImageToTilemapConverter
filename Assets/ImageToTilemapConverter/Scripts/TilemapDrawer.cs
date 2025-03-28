@@ -35,7 +35,7 @@ public class TilemapDrawer : MonoBehaviour
 
         if (tileList.Length == 0)
         {
-            throw new Exception("No Tiles Found");
+            throw new Exception("No Tiles Found in");
         }
         
         foreach (var tile in tileList)
@@ -45,7 +45,8 @@ public class TilemapDrawer : MonoBehaviour
             
         foreach (var data in _converter.TilemapData)
         {
-            _tilemap.SetTile(data.Key, tiles[data.Value]);
+            if(tiles.TryGetValue(data.Value, out var tile))
+               _tilemap.SetTile(data.Key, tile);
         }
         
         GeneratePaths();

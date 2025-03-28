@@ -10,8 +10,8 @@ using UnityEngine.UI;
 public class Converter : MonoBehaviour
 {
     
-    public Dictionary<Vector3Int, Color> TilemapData { get; private set; } = new Dictionary<Vector3Int, Color>();
-    public Dictionary<Vector3, Color> GizmosData { get; private set; } = new Dictionary<Vector3, Color>();
+    public Dictionary<Vector3Int, Color> TilemapData { get; private set; } = new();
+    public Dictionary<Vector3, Color> GizmosData { get; private set; } = new();
 
     public string ImageName;
 
@@ -27,7 +27,13 @@ public class Converter : MonoBehaviour
 
     [Range(1, 3)] [SerializeField] private int _colorPickStep;
 
-    private List<Color> _colors = new List<Color>();
+    [SerializeField] private int _ignoreFirstColors;
+    
+    private List<Color> _colors = new();
+    
+    [Space(50)]
+    [SerializeField] private Image _image;
+    [SerializeField] private Canvas _canvas;
 
 
     public void OnValidate()
@@ -41,7 +47,6 @@ public class Converter : MonoBehaviour
         DrawImage();
 
         
-
         for (float i = _startX; i < _sourceImage.width; i += _step + _floatStep)
         {
             for (float j = _startY; j < _sourceImage.height; j += _step + _floatStep)
@@ -78,13 +83,16 @@ public class Converter : MonoBehaviour
                         break;
                     }
                 }
-
+                
                 if (!isColorSimilar)
+                {
                     PaletteData.Add(pixelColor);
+                }
                 else
-                    PaletteData[colorIndex] =
-                        GetAverageColor(new List<Color>() { PaletteData[colorIndex], pixelColor });
-
+                {
+                    PaletteData[colorIndex] = GetAverageColor(new List<Color>() { PaletteData[colorIndex], pixelColor });
+                }
+                
                 TilemapData.TryAdd(new Vector3Int((int)(i - _startX) / _step, (int)(j - _startY) / _step), pixelColor);
 
                 Vector3 gizmosPosition =
@@ -93,27 +101,20 @@ public class Converter : MonoBehaviour
                 GizmosData.TryAdd(gizmosPosition, pixelColor);
             }
         }
+
+        if(_ignoreFirstColors > 0)
+            PaletteData.RemoveRange(0, _ignoreFirstColors);
+            
     }
 
     #region ImageAnalys
 
     private void DrawImage()
     {
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas == null)
-        {
-            transform.SetParent(new GameObject("Canvas", typeof(Canvas)).transform);
-        }
-        else
-        {
-            transform.SetParent(canvas.transform);
-        }
-
         Sprite sprite = Sprite.Create(_sourceImage, new Rect(0, 0, _sourceImage.width, _sourceImage.height),
             new Vector2(0, 0));
-        Image image = GetComponent<Image>();
-        image.sprite = sprite;
-        image.SetNativeSize();
+        _image.sprite = sprite;
+        _image.SetNativeSize();
         ImageName = _sourceImage.name;
     }
 
